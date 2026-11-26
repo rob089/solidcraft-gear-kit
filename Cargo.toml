@@ -1,0 +1,28 @@
+[package]
+name = "gear-kit"
+version = "1.0.0"
+edition = "2021"
+description = "Gear generator plugin for SolidCraft: spur, helical, herringbone, internal, rack, bevel, worm and worm wheel"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "manifest"
+path = "src/bin/manifest.rs"
+
+[dependencies]
+# preserve_order: the manifest lists each entry's fields in the order schema.rs declares them
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wit-bindgen = "0.46"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1

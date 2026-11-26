@@ -1,0 +1,850 @@
+{
+  "id": "gear-kit",
+  "name": "Gear Kit",
+  "version": "1.0.0",
+  "min_host_version": "0.50.0",
+  "updates": {
+    "github": "rob089/solidcraft-gear-kit"
+  },
+  "capabilities": [
+    "commands@0.2",
+    "dialog@0.1",
+    "storage@0.1",
+    "forms@0.1"
+  ],
+  "runtime": {
+    "module": "plugin.wasm",
+    "entries": [
+      {
+        "name": "spur-gears",
+        "effect": "edit",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/spur_gears.svg",
+          "x-solidcraft-field-order": "declared",
+          "properties": {
+            "summary": {
+              "title": "Result",
+              "description": "Hover the fields for the diameters.",
+              "type": "string",
+              "maxLength": 200,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": "-"
+            },
+            "mate": {
+              "title": "Gear 2 type",
+              "description": "Gear 1 meshes with an external gear, a ring gear or a rack.",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "gear",
+                  "title": "External gear",
+                  "x-solidcraft-icon": "icons/mate_gear.svg"
+                },
+                {
+                  "const": "ring",
+                  "title": "Ring gear (internal)",
+                  "x-solidcraft-icon": "icons/mate_ring.svg"
+                },
+                {
+                  "const": "rack",
+                  "title": "Rack",
+                  "x-solidcraft-icon": "icons/mate_rack.svg"
+                }
+              ],
+              "default": "gear"
+            },
+            "module": {
+              "title": "Module",
+              "description": "Normal module m.",
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 50,
+              "unit": "mm",
+              "default": 2
+            },
+            "pressure_angle": {
+              "title": "Pressure angle",
+              "description": "Normal pressure angle.",
+              "type": "number",
+              "minimum": 10,
+              "maximum": 35,
+              "unit": "°",
+              "default": 20
+            },
+            "helix_angle": {
+              "title": "Helix angle",
+              "description": "0 = spur (straight) teeth.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 45,
+              "unit": "°",
+              "default": 0
+            },
+            "helix_hand": {
+              "title": "Gear 1 helix hand",
+              "description": "Gear 2 gets the hand that meshes.",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "right",
+                  "title": "Right"
+                },
+                {
+                  "const": "left",
+                  "title": "Left"
+                }
+              ],
+              "x-solidcraft-visible-when": {
+                "not": {
+                  "field": "helix_angle",
+                  "eq": 0
+                }
+              },
+              "default": "right"
+            },
+            "herringbone": {
+              "title": "Herringbone",
+              "description": "Double helical teeth, no axial thrust.",
+              "type": "boolean",
+              "x-solidcraft-visible-when": {
+                "all": [
+                  {
+                    "not": {
+                      "field": "helix_angle",
+                      "eq": 0
+                    }
+                  },
+                  {
+                    "not": {
+                      "field": "mate",
+                      "eq": "rack"
+                    }
+                  }
+                ]
+              },
+              "default": false
+            },
+            "face_width": {
+              "title": "Face width",
+              "description": "Both gears.",
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2000,
+              "unit": "mm",
+              "default": 10
+            },
+            "backlash": {
+              "title": "Backlash",
+              "description": "Of the pair, taken half from each gear.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "unit": "mm",
+              "default": 0
+            },
+            "create_1": {
+              "title": "Create gear 1",
+              "description": "On the Z axis; with a ring gear, the ring is.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_1": {
+              "title": "Gear 1 teeth",
+              "description": "Below 17 (20°) the root is undercut as hobbed.",
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 200,
+              "default": 18
+            },
+            "profile_shift_1": {
+              "title": "Gear 1 profile shift",
+              "description": "x1; positive: thicker teeth, larger tip.",
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1.5,
+              "default": 0
+            },
+            "create_2": {
+              "title": "Create gear 2",
+              "description": "Placed in mesh with gear 1.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_2": {
+              "title": "Gear 2 teeth",
+              "description": "Teeth of gear 2, the ring gear or the rack (its length in pitches).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 400,
+              "default": 36
+            },
+            "profile_shift_2": {
+              "title": "Gear 2 profile shift",
+              "description": "x2; the centre distance follows. Ring gear: positive outward.",
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1.5,
+              "x-solidcraft-visible-when": {
+                "not": {
+                  "field": "mate",
+                  "eq": "rack"
+                }
+              },
+              "default": 0
+            },
+            "rim_diameter": {
+              "title": "Ring Ø (0=auto)",
+              "description": "Outer diameter of the ring; 0 = root diameter + 6 modules.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5000,
+              "unit": "mm",
+              "x-solidcraft-visible-when": {
+                "all": [
+                  {
+                    "field": "create_2",
+                    "eq": true
+                  },
+                  {
+                    "field": "mate",
+                    "eq": "ring"
+                  }
+                ]
+              },
+              "default": 0
+            },
+            "rack_height": {
+              "title": "Rack height (0=auto)",
+              "description": "Back face to pitch line; 0 = 6 modules.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2000,
+              "unit": "mm",
+              "x-solidcraft-visible-when": {
+                "all": [
+                  {
+                    "field": "create_2",
+                    "eq": true
+                  },
+                  {
+                    "field": "mate",
+                    "eq": "rack"
+                  }
+                ]
+              },
+              "default": 0
+            },
+            "name": {
+              "title": "Name",
+              "description": "Prefix of the body names.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60,
+              "default": "Gear"
+            },
+            "addendum": {
+              "title": "Addendum coefficient",
+              "description": "× module (standard 1).",
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1.5,
+              "default": 1
+            },
+            "dedendum": {
+              "title": "Dedendum coefficient",
+              "description": "× module (standard 1.25).",
+              "type": "number",
+              "minimum": 0.8,
+              "maximum": 2,
+              "default": 1.25
+            },
+            "root_fillet": {
+              "title": "Root fillet coefficient",
+              "description": "Cutter tip radius × module (DIN 867: 0.38); ring gears use 0.25.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.6,
+              "default": 0.38
+            },
+            "replace": {
+              "title": "Replaces folder",
+              "description": "Set by Edit Gears: the timeline folder of the gears this run replaces (0: new gears).",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2000000000,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": 0
+            }
+          }
+        },
+        "dialog_hook": true,
+        "slots": [
+          {
+            "kind": "menu",
+            "name": "Spur / Helical Gears"
+          }
+        ]
+      },
+      {
+        "name": "bevel-gears",
+        "effect": "edit",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/bevel_gears.svg",
+          "x-solidcraft-field-order": "declared",
+          "properties": {
+            "summary": {
+              "title": "Result",
+              "description": "Hover the fields for the diameters.",
+              "type": "string",
+              "maxLength": 200,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": "-"
+            },
+            "module": {
+              "title": "Module",
+              "description": "Normal module m.",
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 50,
+              "unit": "mm",
+              "default": 2
+            },
+            "pressure_angle": {
+              "title": "Pressure angle",
+              "description": "Normal pressure angle.",
+              "type": "number",
+              "minimum": 10,
+              "maximum": 35,
+              "unit": "°",
+              "default": 20
+            },
+            "shaft_angle": {
+              "title": "Shaft angle",
+              "description": "Pitch cones up to 72°.",
+              "type": "number",
+              "minimum": 20,
+              "maximum": 120,
+              "unit": "°",
+              "default": 90
+            },
+            "face_width": {
+              "title": "Face width",
+              "description": "Along the cone; usually 1/3 of the cone distance, at most 0.42.",
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1000,
+              "unit": "mm",
+              "default": 8
+            },
+            "profile_shift": {
+              "title": "Profile shift",
+              "description": "x for gear 1, -x for gear 2.",
+              "type": "number",
+              "minimum": -0.5,
+              "maximum": 0.8,
+              "default": 0
+            },
+            "backlash": {
+              "title": "Backlash",
+              "description": "Of the pair, taken half from each gear.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "unit": "mm",
+              "default": 0
+            },
+            "create_1": {
+              "title": "Create gear 1",
+              "description": "Gear 1 (the pinion) sits on the Z axis.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_1": {
+              "title": "Gear 1 teeth",
+              "type": "integer",
+              "minimum": 6,
+              "maximum": 140,
+              "default": 15
+            },
+            "create_2": {
+              "title": "Create gear 2",
+              "description": "Placed in mesh with gear 1.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_2": {
+              "title": "Gear 2 teeth",
+              "type": "integer",
+              "minimum": 6,
+              "maximum": 140,
+              "default": 30
+            },
+            "name": {
+              "title": "Name",
+              "description": "Prefix of the body names.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60,
+              "default": "Gear"
+            },
+            "replace": {
+              "title": "Replaces folder",
+              "description": "Set by Edit Gears: the timeline folder of the gears this run replaces (0: new gears).",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2000000000,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": 0
+            }
+          }
+        },
+        "dialog_hook": true,
+        "slots": [
+          {
+            "kind": "menu",
+            "name": "Bevel Gears"
+          }
+        ]
+      },
+      {
+        "name": "worm-gears",
+        "effect": "edit",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/worm_gears.svg",
+          "x-solidcraft-field-order": "declared",
+          "properties": {
+            "summary": {
+              "title": "Result",
+              "description": "Hover the fields for the diameters.",
+              "type": "string",
+              "maxLength": 200,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": "-"
+            },
+            "module": {
+              "title": "Module",
+              "description": "Axial module of the worm.",
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 30,
+              "unit": "mm",
+              "default": 2
+            },
+            "pressure_angle": {
+              "title": "Pressure angle",
+              "description": "Axial pressure angle of the worm.",
+              "type": "number",
+              "minimum": 10,
+              "maximum": 35,
+              "unit": "°",
+              "default": 20
+            },
+            "helix_hand": {
+              "title": "Hand",
+              "description": "The wheel gets the same hand.",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "right",
+                  "title": "Right"
+                },
+                {
+                  "const": "left",
+                  "title": "Left"
+                }
+              ],
+              "default": "right"
+            },
+            "backlash": {
+              "title": "Backlash",
+              "description": "Of the pair, taken half from each gear.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "unit": "mm",
+              "default": 0
+            },
+            "create_1": {
+              "title": "Create worm",
+              "description": "Along Y beside the wheel, in mesh.",
+              "type": "boolean",
+              "default": true
+            },
+            "starts": {
+              "title": "Worm starts",
+              "description": "Ratio = wheel teeth / starts.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "default": 1
+            },
+            "worm_diameter": {
+              "title": "Worm pitch diameter",
+              "description": "d1, usually 8 to 16 modules.",
+              "type": "number",
+              "minimum": 2,
+              "maximum": 1000,
+              "unit": "mm",
+              "default": 20
+            },
+            "worm_length": {
+              "title": "Worm length",
+              "type": "number",
+              "minimum": 2,
+              "maximum": 3000,
+              "unit": "mm",
+              "default": 40
+            },
+            "create_2": {
+              "title": "Create worm wheel",
+              "description": "The wheel sits on the Z axis.",
+              "type": "boolean",
+              "default": true
+            },
+            "wheel_teeth": {
+              "title": "Wheel teeth",
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 80,
+              "default": 30
+            },
+            "wheel_face_width": {
+              "title": "Wheel face width",
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1000,
+              "unit": "mm",
+              "default": 12
+            },
+            "name": {
+              "title": "Name",
+              "description": "Prefix of the body names.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60,
+              "default": "Worm"
+            },
+            "replace": {
+              "title": "Replaces folder",
+              "description": "Set by Edit Gears: the timeline folder of the gears this run replaces (0: new gears).",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2000000000,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": 0
+            }
+          }
+        },
+        "dialog_hook": true,
+        "slots": [
+          {
+            "kind": "menu",
+            "name": "Worm Gears"
+          }
+        ]
+      },
+      {
+        "name": "timing-pulleys",
+        "effect": "edit",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/timing_pulleys.svg",
+          "x-solidcraft-field-order": "declared",
+          "properties": {
+            "summary": {
+              "title": "Result",
+              "description": "Hover the fields for the diameters.",
+              "type": "string",
+              "maxLength": 200,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": "-"
+            },
+            "profile": {
+              "title": "Belt profile",
+              "description": "GT2: Gates' belt, in no standard. HTD: ISO 13050. T: DIN 7721. MXL, XL: ISO 5294.",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "gt2-2",
+                  "title": "GT2 2 mm"
+                },
+                {
+                  "const": "gt2-3",
+                  "title": "GT2 3 mm"
+                },
+                {
+                  "const": "htd-3m",
+                  "title": "HTD 3M"
+                },
+                {
+                  "const": "htd-5m",
+                  "title": "HTD 5M"
+                },
+                {
+                  "const": "htd-8m",
+                  "title": "HTD 8M"
+                },
+                {
+                  "const": "t2.5",
+                  "title": "T2.5"
+                },
+                {
+                  "const": "t5",
+                  "title": "T5"
+                },
+                {
+                  "const": "t10",
+                  "title": "T10"
+                },
+                {
+                  "const": "mxl",
+                  "title": "MXL"
+                },
+                {
+                  "const": "xl",
+                  "title": "XL"
+                }
+              ],
+              "default": "gt2-2"
+            },
+            "face_width": {
+              "title": "Width",
+              "description": "Of the toothed part; the standard's minimum for each belt width is in the tooltip.",
+              "type": "number",
+              "minimum": 1,
+              "maximum": 500,
+              "unit": "mm",
+              "default": 7
+            },
+            "groove_clearance": {
+              "title": "Groove clearance",
+              "description": "Widens every groove by this much, half on each side; 0 = as the standard. Printed pulleys: try 0.1 to 0.2.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5,
+              "unit": "mm",
+              "default": 0
+            },
+            "flanges": {
+              "title": "Flanges",
+              "description": "Discs on the pulley that keep the belt on.",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "none",
+                  "title": "None"
+                },
+                {
+                  "const": "one",
+                  "title": "One, below the teeth"
+                },
+                {
+                  "const": "both",
+                  "title": "Both sides"
+                }
+              ],
+              "default": "both"
+            },
+            "flange_height": {
+              "title": "Flange height (0=auto)",
+              "description": "Above the outside diameter; 0 = the standard's minimum.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50,
+              "unit": "mm",
+              "x-solidcraft-visible-when": {
+                "not": {
+                  "field": "flanges",
+                  "eq": "none"
+                }
+              },
+              "default": 0
+            },
+            "flange_thickness": {
+              "title": "Flange thickness",
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 20,
+              "unit": "mm",
+              "x-solidcraft-visible-when": {
+                "not": {
+                  "field": "flanges",
+                  "eq": "none"
+                }
+              },
+              "default": 1
+            },
+            "create_1": {
+              "title": "Create pulley 1",
+              "description": "On the Z axis.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_1": {
+              "title": "Pulley 1 teeth",
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 250,
+              "default": 20
+            },
+            "create_2": {
+              "title": "Create pulley 2",
+              "description": "On +X, at the centre distance the belt sets.",
+              "type": "boolean",
+              "default": true
+            },
+            "teeth_2": {
+              "title": "Pulley 2 teeth",
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 250,
+              "default": 40
+            },
+            "belt_teeth": {
+              "title": "Belt teeth",
+              "description": "Belt length in teeth (pitch length ÷ pitch); sets the centre distance.",
+              "type": "integer",
+              "minimum": 20,
+              "maximum": 2000,
+              "default": 100
+            },
+            "name": {
+              "title": "Name",
+              "description": "Prefix of the body names.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60,
+              "default": "Pulley"
+            },
+            "replace": {
+              "title": "Replaces folder",
+              "description": "Set by Edit Gears: the timeline folder of the gears this run replaces (0: new gears).",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2000000000,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": 0
+            }
+          }
+        },
+        "dialog_hook": true,
+        "slots": [
+          {
+            "kind": "menu",
+            "name": "Timing Pulleys"
+          }
+        ]
+      },
+      {
+        "name": "edit-gears",
+        "effect": "read",
+        "input_schema": {
+          "type": "object",
+          "x-solidcraft-icon": "icons/edit_gears.svg",
+          "x-solidcraft-field-order": "declared",
+          "properties": {
+            "summary": {
+              "title": "Gears",
+              "description": "The gears the pick belongs to.",
+              "type": "string",
+              "maxLength": 200,
+              "x-solidcraft-enabled-when": {
+                "not": {
+                  "all": []
+                }
+              },
+              "default": "-"
+            },
+            "gear": {
+              "title": "Gear",
+              "description": "A gear or pulley made by Gear Kit; Run opens its dialog with its values.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "x-solidcraft-selection": {
+                "version": 1,
+                "accept": [
+                  "body"
+                ]
+              }
+            }
+          }
+        },
+        "dialog_hook": true,
+        "slots": [
+          {
+            "kind": "menu",
+            "name": "Edit Gears"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      "sketch.create",
+      "sketch.finish",
+      "sketch.line",
+      "sketch.arc.center_point",
+      "sketch.spline.fit_point",
+      "sketch.circle.center",
+      "sketch.rectangle.two_point",
+      "sketch.pattern.circular",
+      "sketch.pattern.rectangular",
+      "solid.cylinder",
+      "solid.extrude",
+      "solid.sweep",
+      "solid.revolve",
+      "solid.coil",
+      "solid.move",
+      "solid.mirror",
+      "browser.visibility",
+      "timeline.group",
+      "timeline.inspect",
+      "timeline.delete",
+      "timeline.roll_to",
+      "document.inspect",
+      "storage.get",
+      "storage.patch"
+    ],
+    "data_format": 1,
+    "limits": {
+      "fuel": 20000000000,
+      "memory_mib": 64,
+      "deadline_ms": 30000
+    }
+  }
+}

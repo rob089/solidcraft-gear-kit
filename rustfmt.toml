@@ -1,0 +1,3 @@
+# Long lines are fine here: formulas and messages read better unbroken.
+max_width = 140
+use_small_heuristics = "Max"
