@@ -2,12 +2,7 @@
 
 A [SolidCraft](https://github.com/tangency-labs/solidcraft) plugin for gears and timing belt pulleys.
 
-<p align="center">
-  <img src="docs/images/spur-pair.png" width="24%" alt="Spur gear pair">
-  <img src="docs/images/bevel-pair.png" width="24%" alt="Bevel gear pair">
-  <img src="docs/images/worm-drive.png" width="24%" alt="Worm drive">
-  <img src="docs/images/pulley-pair.png" width="24%" alt="GT2 pulley pair">
-</p>
+![Spur, herringbone, ring and bevel gears, gear and rack, worm drive, GT2 and HTD pulleys](docs/images/gallery.png)
 
 ## Install
 
